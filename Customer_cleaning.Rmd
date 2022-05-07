@@ -1,0 +1,108 @@
+---
+title: "Untitled"
+output: html_document
+date: '2022-05-05'
+---
+
+```{r}
+
+library(dplyr)
+library(tidyverse)
+library(ggvis)
+library(cluster)
+
+customer_data_raw <- read.csv("/cloud/project/StockPicker/Mall_Customers.csv")
+customer_data <- na.omit(customer_data_raw)
+names(customer_data)[4] <- "Annual_Income"
+names(customer_data)[5] <- "Spending_Score"
+customer_data <- subset(customer_data, select = -c(CustomerID, Gender, Annual_Income))
+
+customer_data_full <- na.omit(customer_data_raw)
+
+```
+
+```{r}
+sum_of_squares = kmeans(customer_data, centers=1)$tot.withinss
+
+for (i in 2:15)
+  sum_of_squares[i] = kmeans(customer_data, centers=i)$tot.withinss
+
+sum_of_squares
+```
+
+```{r}
+library(ggvis)
+
+sum_of_squares_df = data.frame(c(1:15), c(sum_of_squares))
+names(sum_of_squares_df)[1] = "Clusters"
+names(sum_of_squares_df)[2] = "SS"
+
+sum_of_squares_df
+
+sum_of_squares_df %>%
+  ggvis(~Clusters, ~SS) %>%
+  layer_points(fill := "blue") %>%
+  layer_lines() %>%
+  set_options(height = 300, width = 400)
+```
+
+```{r}
+clusters = kmeans(customer_data, 8)
+clusters
+
+clusplot(customer_data, clusters$cluster)
+```
+
+# General analysis
+```{r}
+library(ggplot2)
+
+
+ggplot(customer_data, aes(x=customer_data_full$Age, fill=customer_data_full$Gender )) + 
+  geom_histogram(bins = 8, position = "dodge") + 
+  xlab("Age") +
+  labs(fill = "Gender")
+```
+
+```{r}
+library(ggplot2)
+
+
+ggplot(customer_data, aes(x=as.factor(customer_data_raw$Gender), fill=as.factor(customer_data_raw$Gender) )) + 
+  geom_bar( ) +
+  theme(legend.position="none") +
+  xlab("Gender")
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(customer_data, aes(x=customer_data_full$Annual.Income..k.., fill=customer_data_full$Gender )) + 
+  geom_histogram(bins = 10, position = "dodge") + 
+  xlab("Income") +
+  labs(fill = "Gender")
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(customer_data, aes(x=customer_data_full$Spending.Score..1.100., fill=customer_data_full$Gender )) + 
+  geom_histogram(bins = 10, position = "dodge") + 
+  xlab("Score") +
+  labs(fill = "Gender")
+```
+
+```{r}
+plot(customer_data_full$Age, customer_data_full$Annual.Income..k..,pch = 19,
+  main = "Income by Age",
+  xlab = "Age",
+  ylab = "Annnual Income")
+```
+
+```{r}
+plot(customer_data_full$Age, customer_data_full$Spending.Score..1.100.,pch = 19,
+  main = "Spending Score by Age",
+  xlab = "Age",
+  ylab = "Spending Score")
+points(customer_data_full$Age, customer_data_full$Annual.Income..k..,col = "red",pch = 19)
+```
